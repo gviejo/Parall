@@ -29,7 +29,7 @@ def makeWeight(phi, offset):
 	return w
 
 AGENT_IMAGE = 'agent.png'
-WINDOW_WIDTH = 500
+WINDOW_WIDTH = 700
 WINDOW_HEIGHT = 500
 
 class Agent(pyglet.sprite.Sprite):
@@ -60,8 +60,9 @@ class Agent(pyglet.sprite.Sprite):
 		y 			= self.y
 		dt 			= dt/1000. 		
 		for i, t in enumerate(self.times):			
-			self.wheel_speed += np.clip(np.random.normal(0, 0.05, 2)*2, -4.0, 4.0)
-			# self.wheel_speed += np.random.uniform(-1, 1, 2)
+			# self.wheel_speed += np.clip(np.random.normal(0, 0.1, 2), -1, 1)
+			self.wheel_speed += np.random.normal(0, 0.02, 2)
+			# self.wheel_speed += np.random.uniform(-0.01, 0.01, 2)
 			vl, vr 		= self.wheel_speed
 			cste1 		= (vr + vl)/2.
 			theta 		+= dt*((vr - vl)/2.)
@@ -87,7 +88,7 @@ class Agent(pyglet.sprite.Sprite):
 #############################################################################
 # AGENT RUN
 #############################################################################
-duration 		= 40000 #ms
+duration 		= 60000 #ms
 dt 				= 10 #ms
 agent = Agent()
 agent.run(duration, dt)
@@ -205,26 +206,38 @@ data = {nme:frate.filter(regex=nme).values for nme in ['lmncw_*','lmnccw_*','adn
 ######################################################################
 # LIVE DISPLAY
 ######################################################################
-figw, figh = (400,WINDOW_HEIGHT)
+figw, figh = (500,WINDOW_HEIGHT)
 window  = pyglet.window.Window(WINDOW_WIDTH+figw, WINDOW_HEIGHT)
-dpi_res = 60
+dpi_res = 100
 
 # set position of agent to final position
 agent.counter = len(agent.data)-1
 agent.time_count = agent.data.index[-1]
 agent.update(dt)
 
+# rotate phi so that it matches the orientatio of the agent
+tofrate = pd.DataFrame(index = frate.index, columns = phi, data = 0)
+for nme in ['lmncw_*','lmnccw_*','adn_*']: tofrate += frate.filter(regex=nme).values
+network_heading = tofrate.iloc[-1].idxmax()
+agent_heading = agent.data['theta'].iloc[-1]
+diff_phase = network_heading - agent_heading
+phi = phi - diff_phase
+
 # networks liveplay
 fig = Figure((figw/dpi_res, figh/dpi_res), dpi = dpi_res)
 axes = {}
-for rect, nme in zip([[0.05,0,0.35,0.5],[0.6,0,0.35,0.5],[0.25,0.4,0.5,0.5]],['lmncw_*','lmnccw_*','adn_*']): # left, bottom, width, height
+xticks(fontsize = 7)
+for rect, nme in zip([[0.08,0.05,0.35,0.4],[0.58,0.05,0.35,0.4],[0.3,0.55,0.35,0.4]],['lmncw_*','lmnccw_*','adn_*']): # left, bottom, width, height
 	ax = fig.add_axes(rect, projection = 'polar')
 	# ax.set_ylim(0,1)
 	ax.set_autoscale_on(False)
+	ax.set_yticks([])
+	ax.tick_params(pad = 0)
 	axes[nme] = ax
 	# line, = ax.plot(phi, data[nme][-1], '-')	
-	bar = ax.bar(phi, data[nme][-1], 0.3, align='center')
-	npos, = ax.plot(phi, np.ones_like(phi), 'o-', color = 'black')
+	bar = ax.bar(phi, data[nme][-1], 0.25, align='center')
+	tmp = np.arange(0, 2*np.pi+2*np.pi/n, 2*np.pi/n) # radial position of the neurons 	
+	npos, = ax.plot(tmp, np.ones_like(tmp)*0.9, 'o-', color = 'black')
 
 canvas = FigureCanvasAgg(fig)
 canvas.draw()

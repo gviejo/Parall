@@ -201,20 +201,19 @@ data = {nme:frate.filter(regex=nme).values for nme in ['lmncw_*','lmnccw_*','adn
 ######################################################################
 # LIVE DISPLAY
 ######################################################################
-sys.exit()
 figw, figh = (400,WINDOW_HEIGHT)
 window  = pyglet.window.Window(WINDOW_WIDTH+figw, WINDOW_HEIGHT)
 dpi_res = 60
 
-# path of the agent
-path_figure = Figure((WINDOW_WIDTH/dpi_res, WINDOW_HEIGHT/dpi_res))
-ax = path_figure.add_axes([0,0,1,1])
-ax.plot(agent.data['x'], agent.data['y'])
-ax.set_xlim(0, WINDOW_WIDTH)
-ax.set_ylim(0, WINDOW_HEIGHT)
-canvas = FigureCanvasAgg(path_figure)
-canvas.draw()
-path_image = pyglet.image.ImageData(WINDOW_WIDTH, WINDOW_HEIGHT, 'RGB', data = canvas.tostring_rgb() , pitch = -3*WINDOW_WIDTH)
+# # path of the agent
+# path_figure = Figure((WINDOW_WIDTH/dpi_res, WINDOW_HEIGHT/dpi_res))
+# ax = path_figure.add_axes([0,0,1,1])
+# ax.plot(agent.data['x'], agent.data['y'])
+# ax.set_xlim(0, WINDOW_WIDTH)
+# ax.set_ylim(0, WINDOW_HEIGHT)
+# canvas = FigureCanvasAgg(path_figure)
+# canvas.draw()
+# path_image = pyglet.image.ImageData(WINDOW_WIDTH, WINDOW_HEIGHT, 'RGB', data = canvas.tostring_rgb() , pitch = -3*WINDOW_WIDTH)
 
 # networks liveplay
 fig = Figure((figw/dpi_res, figh/dpi_res), dpi = dpi_res)
@@ -254,7 +253,7 @@ def update(dt):
 
 	image.set_data(data = canvas.tostring_rgb(), format = 'RGB', pitch = -3*figw)
 	image.blit(WINDOW_WIDTH,WINDOW_HEIGHT-figh)
-	path_image.blit(0,0)	
+	# path_image.blit(0,0)	
 
 @window.event
 def on_draw():			
@@ -263,6 +262,7 @@ def on_draw():
 
 pyglet.clock.schedule_interval(update, 1/100.)
 pyglet.app.run()
+window.close()
 
 
 
@@ -271,8 +271,7 @@ pyglet.app.run()
 theta = agent.data['theta']
 bins = np.hstack([phi, np.array([2*np.pi])])
 pos_theta = pd.Series(index = theta.index.values, data = np.digitize(theta, bins)-1)
-from matplotlib.pyplot import plot, ion, show
-ion()
+
 figure()
 plot(adn_mon.t/ms, adn_mon.i+2*n+2, '.g', label = 'ADN')
 plot(cw_mon.t/ms, cw_mon.i+n+1, '.r', label = 'LMN(clockwise)')
@@ -301,4 +300,4 @@ subplot(212)
 plot(CCW_noise.values, estim_vel.values, '-', label= 'ccw')
 legend()
 
-show()
+show(block = False)
